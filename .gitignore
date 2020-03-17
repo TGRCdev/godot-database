@@ -1,0 +1,5 @@
+*.pyc
+*.o
+*.obj
+.vscode
+demo/.import

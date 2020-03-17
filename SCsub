@@ -1,0 +1,6 @@
+Import('env')
+
+src_list = ["database.cpp", "postgresql.cpp", "register_types.cpp"]
+
+env.add_source_files(env.modules_sources, src_list)
+env.Append(LIBS="pq", LIBPATH=["/usr/lib/x86_64-linux-gnu"])
