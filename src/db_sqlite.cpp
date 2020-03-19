@@ -4,12 +4,12 @@
 
 void DatabaseSQLite::_bind_methods()
 {
-    BIND_ENUM_CONSTANT(SQLITE_OPEN_READONLY);
-    BIND_ENUM_CONSTANT(SQLITE_OPEN_READWRITE);
-    BIND_ENUM_CONSTANT(SQLITE_OPEN_CREATE);
-    BIND_ENUM_CONSTANT(SQLITE_OPEN_MEMORY);
-    BIND_ENUM_CONSTANT(SQLITE_OPEN_URI);
-    BIND_ENUM_CONSTANT(SQLITE_OPEN_NOFOLLOW);
+    BIND_ENUM_CONSTANT(OPEN_READONLY);
+    BIND_ENUM_CONSTANT(OPEN_READWRITE);
+    BIND_ENUM_CONSTANT(OPEN_CREATE);
+    BIND_ENUM_CONSTANT(OPEN_MEMORY);
+    BIND_ENUM_CONSTANT(OPEN_URI);
+    BIND_ENUM_CONSTANT(OPEN_NOFOLLOW);
 
     ClassDB::bind_method(D_METHOD("open", "path", "flags"), &DatabaseSQLite::open);
     ClassDB::bind_method(D_METHOD("get_filepath"), &DatabaseSQLite::get_filepath);
@@ -237,39 +237,33 @@ bool CursorSQLite::bind_parameters(sqlite3_stmt *stmt, Array arguments)
     int arg_count = arguments.size();
     if(param_count != arg_count)
     {
-        WARN_PRINT("SQLite statement expected " + itos(param_count) + " arguments, got " + itos(arg_count));
+        print_error("SQLite statement expected " + itos(param_count) + " arguments, got " + itos(arg_count));
+        return false;
     }
     for(int i = 0; i < param_count; i++)
     {
         int retcode;
 
-        if(i >= arg_count)
-        {
+        switch (arguments[i].get_type()) {
+        case Variant::Type::NIL:
             retcode = sqlite3_bind_null(stmt, i + 1);
-        }
-        else
-        {
-            switch (arguments[i].get_type()) {
-			case Variant::Type::NIL:
-				retcode = sqlite3_bind_null(stmt, i + 1);
-				break;
-			case Variant::Type::BOOL:
-			case Variant::Type::INT:
-				retcode = sqlite3_bind_int(stmt, i + 1, (int)arguments[i]);
-				break;
-			case Variant::Type::FLOAT:
-				retcode = sqlite3_bind_double(stmt, i + 1, (double)arguments[i]);
-				break;
-			case Variant::Type::STRING:
-				retcode = sqlite3_bind_text(stmt, i + 1, String(arguments[i]).utf8().get_data(), -1, SQLITE_TRANSIENT);
-				break;
-			case Variant::Type::PACKED_BYTE_ARRAY:
-				retcode = sqlite3_bind_blob(stmt, i + 1, PackedByteArray(arguments[i]).ptr(), PackedByteArray(arguments[i]).size(), SQLITE_TRANSIENT);
-				break;
-			default:
-				print_error("SQLite was passed unhandled Variant with TYPE_* enum " + itos(arguments[i].get_type()) + ". Please serialize your object into a String or a PoolByteArray.\n");
-				return false;
-            }
+            break;
+        case Variant::Type::BOOL:
+        case Variant::Type::INT:
+            retcode = sqlite3_bind_int(stmt, i + 1, (int)arguments[i]);
+            break;
+        case Variant::Type::FLOAT:
+            retcode = sqlite3_bind_double(stmt, i + 1, (double)arguments[i]);
+            break;
+        case Variant::Type::STRING:
+            retcode = sqlite3_bind_text(stmt, i + 1, String(arguments[i]).utf8().get_data(), -1, SQLITE_TRANSIENT);
+            break;
+        case Variant::Type::PACKED_BYTE_ARRAY:
+            retcode = sqlite3_bind_blob(stmt, i + 1, PackedByteArray(arguments[i]).ptr(), PackedByteArray(arguments[i]).size(), SQLITE_TRANSIENT);
+            break;
+        default:
+            print_error("SQLite was passed unhandled Variant with TYPE_* enum " + itos(arguments[i].get_type()) + ". Please serialize your object into a String or a PackedByteArray.\n");
+            return false;
         }
         
         if (retcode != SQLITE_OK) {

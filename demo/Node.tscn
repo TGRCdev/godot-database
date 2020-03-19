@@ -7,16 +7,19 @@ var db : Database;
 
 func _ready():
 	db = DatabaseSQLite.new();
-	var opened = db.open(\":memdb:\", DatabaseSQLite.SQLITE_OPEN_CREATE | DatabaseSQLite.SQLITE_OPEN_READWRITE | DatabaseSQLite.SQLITE_OPEN_MEMORY);
+	var opened = db.open(\"res://test.db\", DatabaseSQLite.OPEN_READWRITE);
 	if opened:
 		print(\"db open: %s\" % db.is_open());
 		var cursor = db.cursor();
-		cursor.execute(\"CREATE TABLE IF NOT EXISTS gamer (id INTEGER PRIMARY KEY, name TEXT NOT NULL)\", []);
-		cursor.execute(\"INSERT INTO gamer VALUES (?, ?)\", [OS.get_unix_time(), \"Ted The Gamer\"])
-		cursor.execute(\"SELECT * FROM gamer\", []);
-		for i in range(0, cursor.get_row_count()):
-			print(i);
-			print(cursor.fetch_one());
+		cursor.execute(\"CREATE TABLE IF NOT EXISTS gamer (id INTEGER PRIMARY KEY, name TEXT NOT NULL)\");
+		cursor.execute_many(\"INSERT INTO gamer VALUES (?, ?)\", [
+			[1, \"Ted\"],
+			[2, \"Bill\"],
+			[3, \"Bob\"]
+			])
+		cursor.execute(\"SELECT * FROM gamer\");
+		for row in cursor.fetch_all():
+			print(row);
 		cursor.close();
 		db.commit();
 		db.close();

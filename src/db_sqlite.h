@@ -34,6 +34,12 @@ class DatabaseSQLite : public Database
     sqlite3_stmt *prepare_statement(const char *statement);
 
     public:
+    static const int OPEN_READONLY = SQLITE_OPEN_READONLY;
+    static const int OPEN_READWRITE = SQLITE_OPEN_READWRITE;
+    static const int OPEN_CREATE = SQLITE_OPEN_CREATE;
+    static const int OPEN_MEMORY = SQLITE_OPEN_MEMORY;
+    static const int OPEN_URI = SQLITE_OPEN_URI;
+    static const int OPEN_NOFOLLOW = SQLITE_OPEN_NOFOLLOW;
 
     virtual bool is_open();
 
