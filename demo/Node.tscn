@@ -6,12 +6,19 @@ script/source = "extends Node
 var db : Database;
 
 func _ready():
-	db = DatabasePostgreSQL.new();
-	var opened = db.open(\"postgresql://postgres:pass@localhost:5432/postgres\");
+	db = DatabaseSQLite.new();
+	var opened = db.open(\":memdb:\", DatabaseSQLite.SQLITE_OPEN_CREATE | DatabaseSQLite.SQLITE_OPEN_READWRITE | DatabaseSQLite.SQLITE_OPEN_MEMORY);
 	if opened:
 		print(\"db open: %s\" % db.is_open());
-		db.query(\"literaley nothing\");
-		print(db.get_last_error());
+		var cursor = db.cursor();
+		cursor.execute(\"CREATE TABLE IF NOT EXISTS gamer (id INTEGER PRIMARY KEY, name TEXT NOT NULL)\", []);
+		cursor.execute(\"INSERT INTO gamer VALUES (?, ?)\", [OS.get_unix_time(), \"Ted The Gamer\"])
+		cursor.execute(\"SELECT * FROM gamer\", []);
+		for i in range(0, cursor.get_row_count()):
+			print(i);
+			print(cursor.fetch_one());
+		cursor.close();
+		db.commit();
 		db.close();
 		print(\"db open: %s\" % db.is_open());
 	else:

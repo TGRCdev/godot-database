@@ -2,13 +2,16 @@
 
 #include "core/class_db.h"
 
-#include "database.h"
-#include "postgresql.h"
+#include "src/database.h"
+#include "src/cursor.h"
+#include "src/db_sqlite.h"
 
 void register_database_types()
 {
     ClassDB::register_virtual_class<Database>();
-    ClassDB::register_class<DatabasePostgreSQL>();
+    ClassDB::register_virtual_class<Cursor>();
+    ClassDB::register_class<DatabaseSQLite>();
+    ClassDB::register_class<CursorSQLite>();
 }
 
 void unregister_database_types()

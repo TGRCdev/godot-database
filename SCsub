@@ -1,6 +1,10 @@
 Import('env')
 
-src_list = ["database.cpp", "postgresql.cpp", "register_types.cpp"]
+src_list = ["register_types.cpp"]
+src_list += Glob("src/*.cpp")
+src_list.append("thirdparty/sqlite/sqlite3.c")
 
-env.add_source_files(env.modules_sources, src_list)
-env.Append(LIBS="pq", LIBPATH=["/usr/lib/x86_64-linux-gnu"])
+module_env = env.Clone()
+
+module_env.add_source_files(env.modules_sources, src_list)
+module_env.Append(CPPDEFINES=("SQLITE_THREADSAFE", 1)) # Compile SQLite in "Serialized" threading mode
