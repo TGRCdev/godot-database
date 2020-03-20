@@ -7,11 +7,12 @@ var db : Database;
 
 func _ready():
 	db = DatabaseSQLite.new();
-	var opened = db.open(\"res://test.db\", DatabaseSQLite.OPEN_READWRITE);
+	var opened = db.open(\"res://test.db\", DatabaseSQLite.OPEN_READWRITE | DatabaseSQLite.OPEN_CREATE);
 	if opened:
 		print(\"db open: %s\" % db.is_open());
 		var cursor = db.cursor();
 		cursor.execute(\"CREATE TABLE IF NOT EXISTS gamer (id INTEGER PRIMARY KEY, name TEXT NOT NULL)\");
+		db.commit();
 		cursor.execute_many(\"INSERT INTO gamer VALUES (?, ?)\", [
 			[1, \"Ted\"],
 			[2, \"Bill\"],
@@ -20,8 +21,11 @@ func _ready():
 		cursor.execute(\"SELECT * FROM gamer\");
 		for row in cursor.fetch_all():
 			print(row);
+		db.rollback();
+		cursor.execute(\"SELECT * FROM gamer\");
+		for row in cursor.fetch_all():
+			print(row);
 		cursor.close();
-		db.commit();
 		db.close();
 		print(\"db open: %s\" % db.is_open());
 	else:

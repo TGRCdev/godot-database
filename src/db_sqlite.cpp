@@ -33,8 +33,6 @@ void DatabaseSQLite::close()
 
 sqlite3_stmt *DatabaseSQLite::prepare_statement(const char *statement)
 {
-    ERR_FAIL_COND_V_MSG(!is_open(), nullptr, "SQLite database is not open!");
-
     sqlite3_stmt* stmt;
     int err = sqlite3_prepare_v3(connection, statement, -1, 0, &stmt, nullptr);
     if(err != SQLITE_OK)
@@ -49,8 +47,6 @@ sqlite3_stmt *DatabaseSQLite::prepare_statement(const char *statement)
 
 bool DatabaseSQLite::exec_statement(const char *statement)
 {
-    ERR_FAIL_COND_V_MSG(!is_open(), false, "SQLite database is not open!");
-
     sqlite3_stmt* stmt = prepare_statement(statement);
 
     if(stmt == nullptr)
@@ -78,8 +74,6 @@ bool DatabaseSQLite::exec_statement(const char *statement)
 
 void DatabaseSQLite::begin_transaction()
 {
-    ERR_FAIL_COND_MSG(!is_open(), "SQLite database is not open!");
-
     bool success = exec_statement("BEGIN TRANSACTION");
     ERR_FAIL_COND_MSG(!success, "SQLite failed to begin a new transaction");
 
@@ -359,6 +353,8 @@ int CursorSQLite::get_row_count()
 
 void CursorSQLite::scroll(int amount, bool absolute)
 {
+    ERR_FAIL_COND_MSG(!is_open(), "SQLite cursor is not open!");
+
     if(absolute)
     {
         ERR_FAIL_COND(amount < 0);
@@ -377,6 +373,8 @@ void CursorSQLite::scroll(int amount, bool absolute)
 
 Dictionary CursorSQLite::fetch_one()
 {
+    ERR_FAIL_COND_V_MSG(!is_open(), Dictionary(), "SQLite cursor is not open!");
+
     if(result_pos + 1 > get_row_count())
         return Dictionary();
     
@@ -387,14 +385,26 @@ Dictionary CursorSQLite::fetch_one()
 
 Array CursorSQLite::fetch_many(int size)
 {
-    Array rows = last_result.slice(result_pos, std::min(result_pos + size, last_result.size() - 1), 1, true);
+    ERR_FAIL_COND_V_MSG(!is_open(), Array(), "SQLite cursor is not open!");
+
+    Array rows;
+    if(result_pos >= last_result.size())
+        return rows;
+
+    rows = last_result.slice(result_pos, std::min(result_pos + size, last_result.size() - 1), 1, true);
     result_pos = std::min(result_pos + size, last_result.size() - 1);
     return rows;
 }
 
 Array CursorSQLite::fetch_all()
 {
-    Array rows = last_result.slice(result_pos, last_result.size() - 1, 1, true);
+    ERR_FAIL_COND_V_MSG(!is_open(), Array(), "SQLite cursor is not open!");
+
+    Array rows;
+    if(result_pos >= get_row_count())
+        return rows;
+    
+    rows = last_result.slice(result_pos, last_result.size() - 1, 1, true);
     result_pos = last_result.size() - 1;
     return rows;
 }
