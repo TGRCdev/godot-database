@@ -10,8 +10,9 @@ void DatabaseSQLite::_bind_methods()
     BIND_ENUM_CONSTANT(OPEN_MEMORY);
     BIND_ENUM_CONSTANT(OPEN_URI);
     BIND_ENUM_CONSTANT(OPEN_NOFOLLOW);
+    BIND_ENUM_CONSTANT(OPEN_DEFAULT);
 
-    ClassDB::bind_method(D_METHOD("open", "path", "flags"), &DatabaseSQLite::open);
+    ClassDB::bind_method(D_METHOD("open", "path", "flags"), &DatabaseSQLite::open, OPEN_DEFAULT);
     ClassDB::bind_method(D_METHOD("get_filepath"), &DatabaseSQLite::get_filepath);
     ClassDB::bind_method(D_METHOD("set_auto_commit", "value"), &DatabaseSQLite::set_auto_commit);
     ClassDB::bind_method(D_METHOD("get_auto_commit"), &DatabaseSQLite::get_auto_commit);
@@ -31,7 +32,7 @@ void DatabaseSQLite::close()
     connection = nullptr;
 }
 
-sqlite3_stmt *DatabaseSQLite::prepare_statement(const char *statement)
+sqlite3_stmt *prepare_statement(sqlite3* connection, const char *statement)
 {
     sqlite3_stmt* stmt;
     int err = sqlite3_prepare_v3(connection, statement, -1, 0, &stmt, nullptr);
@@ -45,9 +46,10 @@ sqlite3_stmt *DatabaseSQLite::prepare_statement(const char *statement)
     return stmt;
 }
 
+// Internally execute statement without affecting last results
 bool DatabaseSQLite::exec_statement(const char *statement)
 {
-    sqlite3_stmt* stmt = prepare_statement(statement);
+    sqlite3_stmt* stmt = prepare_statement(connection, statement);
 
     if(stmt == nullptr)
     {
@@ -273,7 +275,7 @@ bool CursorSQLite::execute(String statement, Array arguments)
 {
     ERR_FAIL_COND_V_MSG(!is_open(), false, "SQLite cursor is not open!");
 
-    sqlite3_stmt *stmt = database->prepare_statement(statement.utf8().get_data());
+    sqlite3_stmt *stmt = prepare_statement(database->connection, statement.utf8().get_data());
 
     if(!stmt)
     {
@@ -314,7 +316,7 @@ bool CursorSQLite::execute_many(String statement, Array arg_lists)
 {
     ERR_FAIL_COND_V_MSG(!is_open(), false, "SQLite cursor is not open!");
 
-    sqlite3_stmt *stmt = database->prepare_statement(statement.utf8().get_data());
+    sqlite3_stmt *stmt = prepare_statement(database->connection, statement.utf8().get_data());
 
     last_result.clear();
     result_pos = 0;

@@ -7,4 +7,11 @@ src_list.append("thirdparty/sqlite/sqlite3.c")
 module_env = env.Clone()
 
 module_env.add_source_files(env.modules_sources, src_list)
-module_env.Append(CPPDEFINES=("SQLITE_THREADSAFE", 1)) # Compile SQLite in "Serialized" threading mode
+module_env.Append(CPPDEFINES=[
+    ("SQLITE_THREADSAFE", 1), # Compile SQLite in "Serialized" threading mode
+    ("SQLITE_ENABLE_RTREE", 1), # Enable R*Tree module support
+    ("SQLITE_OMIT_DEPRECATED", 1), # Remove deprecated features from SQLite
+    ("SQLITE_OMIT_PROGRESS_CALLBACK", 1), # Remove progress callback from SQL statements, slightly improving performance
+    ("SQLITE_OMIT_AUTOINIT", 1), # Disables auto-initalize of SQLite, slightly improving performance
+    ("SQLITE_OMIT_SHARED_CACHE", 1), # Disables shared cache, improving performance
+    ]) 

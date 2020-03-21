@@ -19,8 +19,8 @@ class DatabaseSQLite : public Database
 
     sqlite3 *connection = nullptr;
 
-    bool auto_commit;
-    bool in_transaction; // True if there was a transaction started by the SQLite wrapper
+    bool auto_commit = false;
+    bool in_transaction = false; // True if there was a transaction started by the SQLite wrapper
 
     /// Called after every commit() and rollback() when
     /// auto-commit is disabled
@@ -31,8 +31,6 @@ class DatabaseSQLite : public Database
     /// otherwise.
     bool exec_statement(const char *statement);
 
-    sqlite3_stmt *prepare_statement(const char *statement);
-
     public:
     static const int OPEN_READONLY = SQLITE_OPEN_READONLY;
     static const int OPEN_READWRITE = SQLITE_OPEN_READWRITE;
@@ -40,6 +38,7 @@ class DatabaseSQLite : public Database
     static const int OPEN_MEMORY = SQLITE_OPEN_MEMORY;
     static const int OPEN_URI = SQLITE_OPEN_URI;
     static const int OPEN_NOFOLLOW = SQLITE_OPEN_NOFOLLOW;
+    static const int OPEN_DEFAULT = OPEN_READWRITE | OPEN_CREATE;
 
     virtual bool is_open();
 
@@ -76,14 +75,12 @@ class CursorSQLite : public Cursor
     bool bind_parameters(sqlite3_stmt *stmt, Array arguments);
 
     Array last_result;
-    int result_pos;
-
-    bool _open;
+    int result_pos = 0;
 
     Ref<DatabaseSQLite> database;
 
-    virtual bool is_open() {return database.is_valid() && database->is_open() && _open;}
-    virtual void close() {database.unref(); _open = false;}
+    virtual bool is_open() {return database.is_valid() && database->is_open();}
+    virtual void close() {database = Ref<DatabaseSQLite>();}
 
     virtual bool callproc(String procname, Array arguments);
     virtual bool execute(String statement, Array arguments);

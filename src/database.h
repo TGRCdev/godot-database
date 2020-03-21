@@ -4,6 +4,13 @@
 #include "core/reference.h"
 #include "cursor.h"
 
+/// Interface for connecting to external databases
+///
+/// Implementations of Database should be thread-safe, and can
+/// use a mutex internally if the underlying backend isn't thread-safe.
+///
+/// Cursors do not have to be thread-safe individually, but multiple cursors
+/// should be able to interact with a database in a thread-safe manner.
 class Database : public Reference {
     GDCLASS(Database, Reference);
 
@@ -36,6 +43,8 @@ class Database : public Reference {
     virtual void rollback() = 0;
 
     /// Return a cursor to the database.
+    /// If the database doesn't implement cursors,
+    /// cursor support should be emulated.
     virtual Ref<Cursor> cursor() = 0;
 };
 
